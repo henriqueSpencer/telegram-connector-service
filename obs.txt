@@ -1,0 +1,23 @@
+# Cria um package.json padrão, sem ficar fazendo perguntas, pega algumas infos de maneira automatica, qualquer coisa é so alterar diretamento no package
+npm init -y
+
+# intala 4 pacotes essenciais
+# node-fetch -  serve para fazer requisicoes http
+# express - frame work para criar api e webhook em node.json
+# dotenv - gerencia variaveis de ambiente,assim como o do python
+# telegram-bot-api - lib para facilitar integração xcom api do telegram
+npm install node-fetch express dotenv telegram-bot-api
+
+
+# Rodando um arquivo comun
+node index.mjs
+
+# rodando o com o package,
+npm start
+# ou no modo dev:
+npm run dev
+
+# criei uma url p que o webhuk do telegram possa me mandar mensagens.
+brew install ngrok
+ngrok config add-authtoken # Colocar token pego pelo site https://dashboard.ngrok.com/get-started/setup/macos
+ngrok http 3000
