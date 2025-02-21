@@ -1,4 +1,4 @@
-# Connector Service
+# Telegram Connector Service
 
 This repository contains the **Connector Service**, a service developed in **Node.js** that acts as an intermediary between Telegram and the **Bot Service**. It receives messages sent by users on Telegram, forwards them to the **Bot Service** for processing, and returns the appropriate responses.
 
