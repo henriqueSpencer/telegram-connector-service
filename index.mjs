@@ -5,28 +5,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Verifica se todas as variáveis de ambiente estão definidas
-if (
-  !process.env.TELEGRAM_BOT_TOKEN ||
-  !process.env.BOT_SERVICE_URL ||
-  !process.env.WEBHOOK_URL
-) {
-  console.error(
-    "❌ Missing environment variables. Check TELEGRAM_BOT_TOKEN, BOT_SERVICE_URL, and WEBHOOK_URL."
-  );
-  process.exit(1);
-}
-
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const BOT_SERVICE_URL = process.env.BOT_SERVICE_URL;
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
+const BOT_SERVICE_API_KEY = process.env.BOT_SERVICE_API_KEY;
 
 const app = express();
 app.use(express.json());
 
 const bot = new TelegramBotApi({ token: TELEGRAM_BOT_TOKEN });
 
-// ✅ Função para configurar o webhook do Telegram
+// Function to set up the Telegram webhook
 async function setTelegramWebhook() {
   try {
     const webhookUrl = `${WEBHOOK_URL}/webhook`;
@@ -48,13 +37,13 @@ async function setTelegramWebhook() {
   }
 }
 
-// ✅ Configurar webhook ao iniciar
+// Set up the webhook on startup
 setTelegramWebhook();
 
-// ✅ Servidor Express está rodando
+// Express server is running
 console.log("🤖 Telegram Connector Service is running...");
 
-// ✅ Rota para lidar com mensagens do Telegram
+// Route to handle Telegram messages
 app.post("/webhook", async (req, res) => {
   try {
     const { message } = req.body;
@@ -68,23 +57,30 @@ app.post("/webhook", async (req, res) => {
     const userMessage = message.text;
 
     console.log(`📩 Received message from ${chatId}: ${userMessage}`);
+    console.log(BOT_SERVICE_API_KEY);
 
-    // ✅ Enviar mensagem para o Bot Service (Python)
-    // const response = await fetch(BOT_SERVICE_URL, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ chat_id: chatId, text: userMessage }),
-    // });
+    // Send the message to the Bot Service (Python)
+    const response = await fetch(BOT_SERVICE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api_key": BOT_SERVICE_API_KEY,
+      },
+      body: JSON.stringify({
+        chat_id: chatId, // Maps to `request.chat_id` in FastAPI
+        text: userMessage, // Maps to `request.text` in FastAPI
+      }),
+    });
 
-    // const data = await response.json();
+    const data = await response.json();
 
-    // if (data && data.reply) {
-    //   // ✅ Enviar a resposta do Bot Service de volta para o usuário no Telegram
-    //   await bot.sendMessage({ chat_id: chatId, text: data.reply });
-    //   console.log(`📤 Sent response to ${chatId}: ${data.reply}`);
-    // } else {
-    //   console.warn("⚠️ Bot Service returned an unexpected response:", data);
-    // }
+    if (data && data.reply) {
+      // Send the Bot Service's response back to the user on Telegram
+      await bot.sendMessage({ chat_id: chatId, text: data.reply });
+      console.log(`📤 Sent response to ${chatId}: ${data.reply}`);
+    } else {
+      console.warn("⚠️ Bot Service returned an unexpected response:", data);
+    }
   } catch (error) {
     console.error("❌ Error processing message:", error);
   }
@@ -92,7 +88,7 @@ app.post("/webhook", async (req, res) => {
   res.sendStatus(200);
 });
 
-// ✅ Iniciar o servidor Express
+// Start the Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`🚀 Connector Service listening on port ${PORT}`)
